@@ -4,6 +4,14 @@
 from flask import Flask, request, render_template, jsonify
 import json
 import requests
+from datetime import datetime 
+
+from openai import OpenAI
+from dotenv import dotenv_values
+
+config = dotenv_values(".env")
+API_KEY = config["OPENAI-KEY"]
+
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -68,6 +76,39 @@ def home_page():
     # fetch channels from server
     return jsonify(read_messages())
 
+
+def check_and_generate(message):
+    client = OpenAI(api_key=API_KEY)
+    model = "gpt-4o-mini"
+    rules = "First of all, if this message does not have anything to do with cooking just answer with the single word NO! Otherwise follow the instructions in the message. If you provide a recipe structure them the following way: Kitchen utensils, ingredients, instructions, the field instructions does not contain any subheaders."
+    question = f"Message from {message["sender"]}: {message["content"]} - {rules}"
+
+    chat_completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "user", "content": question},
+        ],
+    )
+
+    answer = chat_completion.choices[0].message.content
+    if answer.startswith("NO!"):
+        invalid_answer = {
+            "content": "This channel is entirely about cooking. We have deleted your message because it either isnt about cooking or because it contained harmful language",
+            "sender": "system",
+            "timestamp": datetime.now().isoformat(),
+            "extra": ""
+        }
+        return [invalid_answer]
+
+    else:
+        valid_answer = {
+            "content": answer,
+            "sender": "system",
+            "timestamp": datetime.now().isoformat(),
+            "extra": ""
+        }
+        return [message, valid_answer]
+
 # POST: Send a message
 @app.route('/', methods=['POST'])
 def send_message():
@@ -90,12 +131,16 @@ def send_message():
     else:
         extra = message['extra']
     # add message to messages
+
+    new_messages = check_and_generate(message)
+
     messages = read_messages()
-    messages.append({'content': message['content'],
-                     'sender': message['sender'],
-                     'timestamp': message['timestamp'],
-                     'extra': extra,
-                     })
+    # messages.append({'content': message['content'],
+    #                  'sender': message['sender'],
+    #                  'timestamp': message['timestamp'],
+    #                  'extra': extra,
+    #                  })
+    messages.extend(new_messages)
     save_messages(messages)
     return "OK", 200
 
