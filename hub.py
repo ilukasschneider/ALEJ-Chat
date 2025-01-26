@@ -4,6 +4,10 @@ import json
 import datetime
 import requests
 
+# for local development - delete later
+from flask import Flask
+from flask_cors import CORS
+
 db = SQLAlchemy()
 
 # Define the User data-model.
@@ -31,6 +35,12 @@ class ConfigClass(object):
 
 # Create Flask app
 app = Flask(__name__)
+
+
+# DELETE BEFORE DEPLOYMENT!!
+CORS(app)  # this will allow CORS for all routes by default
+
+
 app.config.from_object(__name__ + '.ConfigClass')  # configuration
 app.app_context().push()  # create an app context before initializing db
 db.init_app(app)  # initialize database

@@ -1,17 +1,15 @@
-import './App.css'
-import { Routes, Route } from 'react-router-dom';
-import Chat from './components/Chat';
-import Home from './components/Home';
+import "./App.css";
+import { Routes, Route } from "react-router-dom";
+import Home from "./components/Home";
 
 function App() {
-    return (
+  return (
     <>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/chat" element={<Chat />} />
       </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -4,10 +4,14 @@
 from flask import Flask, request, render_template, jsonify
 import json
 import requests
-from datetime import datetime 
+from datetime import datetime
 
 from openai import OpenAI
 from dotenv import dotenv_values
+
+# for local development - delete later
+from flask import Flask
+from flask_cors import CORS
 
 config = dotenv_values(".env")
 API_KEY = config["OPENAI-KEY"]
@@ -22,6 +26,11 @@ class ConfigClass(object):
 
 # Create Flask app
 app = Flask(__name__)
+
+# DELETE BEFORE DEPLOYMENT!!
+CORS(app)  # this will allow CORS for all routes by default
+
+
 app.config.from_object(__name__ + '.ConfigClass')  # configuration
 app.app_context().push()  # create an app context before initializing db
 
