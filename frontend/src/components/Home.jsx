@@ -1,15 +1,15 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import ChannelSelector from "./ui/channelSelector";
 
-const Chat = () => {
-    return (
-        <div>
-            <h1>Home sweet Home</h1>
-            <Link to="/chat">
-            <button className="btn btn-primary">Open Chat</button>
-            </Link>
-        </div>
-    )
-}
+const Home = () => {
+  return (
+    <div className="min-h-screen">
+      {/* Navbar at the top */}
+      <ChannelSelector />
 
-export default Chat 
+      {/* Main content */}
+      <div className="mt-22 px-4 flex flex-col items-center"></div>
+    </div>
+  );
+};
+export default Home;
