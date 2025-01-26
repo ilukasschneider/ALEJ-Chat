@@ -20,7 +20,24 @@ AI & the Web, winter term 2024/2025
     
 ~~5. Now open the client from step 3 (URL is displayed in the terminal)~~
 
-5. run client
+5. run client - No need for this if you run the react part 
     > python client.py
     
 6. Now open the client from step 5 (URL is displayed in the terminal)
+
+
+## Run the react part
+
+1. Have npm and nodejs installed
+
+2. change into frontend directory
+
+3. run 
+    > npm install 
+
+4. run
+    > npm run dev
+
+5. Open link shown in console
+
+6. Develop stuff in src/components - base routing in App.jsx
