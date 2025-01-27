@@ -12,10 +12,23 @@ from dotenv import dotenv_values
 # for local development - delete later
 from flask import Flask
 from flask_cors import CORS
+from profanity_check import predict, predict_prob
 
 config = dotenv_values(".env")
 API_KEY = config["OPENAI-KEY"]
 
+
+INVALID_ANSWER = {
+    "content": "This channel is entirely about cooking. We have deleted your message because it either isnt about cooking or because it contained harmful language",
+    "sender": "system",
+    "extra": ""
+}
+WELCOME_MESSAGE = {
+    "content": "🍳 Welcome to the ultimate cooking channel! 🥗✨ Here, you can tell us what you're craving—whether it's a specific cuisine, ingredients you have on hand, or just a wild cooking idea—and our AI will whip up the perfect recipe for you in seconds! Let’s make cooking fun, easy, and delicious together. Ready to get started? Type away and let the magic happen! 🍝🎉",
+    "sender": "system",
+    "extra": "welcome-message"
+}
+MAX_MESSAGES = 200
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -83,7 +96,29 @@ def home_page():
     if not check_authorization(request):
         return "Invalid authorization", 400
     # fetch channels from server
-    return jsonify(read_messages())
+    messages = read_messages()
+    print("Messages: ", messages, type(messages), len(messages))
+    if len(messages) == 0: 
+        messages = add_welcome_message(messages)
+        save_messages(messages)
+    print("Messages: ", messages, type(messages), len(messages))
+
+    return jsonify(messages)
+
+
+def add_welcome_message(messages):
+    print("Add welcome message")
+    welcome_message = WELCOME_MESSAGE.copy()
+    welcome_message["timestamp"] = datetime.now().isoformat()
+    messages.append(WELCOME_MESSAGE)
+    return messages
+
+
+def cut_old_messages(messages):
+    if len(messages) <= MAX_MESSAGES:
+        return messages 
+
+    return [messages[0]] + messages[-(MAX_MESSAGES - 1):]
 
 
 def check_and_generate(message):
@@ -101,12 +136,9 @@ def check_and_generate(message):
 
     answer = chat_completion.choices[0].message.content
     if answer.startswith("NO!"):
-        invalid_answer = {
-            "content": "This channel is entirely about cooking. We have deleted your message because it either isnt about cooking or because it contained harmful language",
-            "sender": "system",
-            "timestamp": datetime.now().isoformat(),
-            "extra": ""
-        }
+        invalid_answer = INVALID_ANSWER.copy()
+        invalid_answer["timestamp"] = datetime.now().isoformat()
+        
         return [invalid_answer]
 
     else:
@@ -140,16 +172,30 @@ def send_message():
     else:
         extra = message['extra']
     # add message to messages
+    print("Will predict")
+    contains_swearing = predict([message["content"]])
+    print(contains_swearing)
 
-    new_messages = check_and_generate(message)
+    if predict([message["content"]]):
+        invalid_answer = INVALID_ANSWER.copy()
+        invalid_answer["timestamp"] = datetime.now().isoformat()
+        new_messages = [invalid_answer]
+    else:
+        new_messages = check_and_generate(message)
+        
 
     messages = read_messages()
+
+    if len(messages) == 0: messages = add_welcome_message(messages)
+
     # messages.append({'content': message['content'],
     #                  'sender': message['sender'],
     #                  'timestamp': message['timestamp'],
     #                  'extra': extra,
     #                  })
     messages.extend(new_messages)
+    if len(messages) >= MAX_MESSAGES:
+        messages = cut_old_messages(messages)
     save_messages(messages)
     return "OK", 200
 

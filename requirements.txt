@@ -3,5 +3,5 @@ flask-sqlalchemy
 requests
 openai
 python-dotenv
-
-// for local development: flask-cors
+alt-profanity-check
+flask-cors
