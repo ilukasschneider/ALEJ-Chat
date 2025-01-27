@@ -8,7 +8,6 @@ const ChatWindow = ({ name, endpoint, auth }) => {
   const username = "JUSTUS PAUERS";
 
   useEffect(() => {
-    // Define a function to fetch
     const fetchData = async () => {
       try {
         const data = await getChannelMessages(endpoint, auth);
@@ -18,19 +17,13 @@ const ChatWindow = ({ name, endpoint, auth }) => {
       }
     };
 
-    // Immediately fetch once on mount
     fetchData();
-
-    // Then set up an interval to fetch every 1000 ms
     const intervalId = setInterval(fetchData, 1000);
-
-    // Cleanup: clear interval when component unmounts
     return () => clearInterval(intervalId);
   }, [endpoint, auth]);
 
   useEffect(() => {
-    // Define a function to fetch
-    const fetchData = async () => {
+    const sendMessage = async () => {
       try {
         await postMessage(endpoint, auth, userMessage, username);
       } catch (err) {
@@ -39,31 +32,32 @@ const ChatWindow = ({ name, endpoint, auth }) => {
     };
 
     if (userMessage) {
-      fetchData();
+      sendMessage();
     }
-  }, [userMessage]);
+  }, [userMessage, endpoint, auth, username]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-base-100">
-      {/* Limit the width of the chat window and put some padding */}
-      <div
-        className="mockup-window border bg-base-300"
-        style={{ maxWidth: "1600px" }}
-      >
-        <div className="bg-base-200 flex flex-col px-4 py-4">
+    <div className="w-screen h-screen flex items-center justify-center bg-transparent">
+      {/*
+        - Removed bg-base-100 to avoid white page background
+        - If you want the entire page to be e.g. black, set bg-black or any other color here
+      */}
+
+      {/*
+        If you still want a border outline (like a “mockup-window”) without a fill,
+        you can keep the classes but switch background to transparent
+      */}
+      <div className="mockup-window border border-gray-400 bg-transparent max-w-4xl w-full mx-4">
+        <div className="flex flex-col p-6 bg-transparent">
           {/* Channel info/title */}
-          <div className="mb-3">
+          <div className="mb-4">
             <h2 className="text-xl font-bold">Channel: {name}</h2>
             <p className="text-sm">Endpoint: {endpoint}</p>
             <p className="text-sm">Auth Key: {auth}</p>
-            <br />
           </div>
 
           {/* Scrollable Chat Messages area */}
-          <div
-            className="rounded p-4 overflow-y-auto bg-base-100 mb-4"
-            style={{ maxHeight: "1000px" }}
-          >
+          <div className="p-4 overflow-y-auto mb-4 max-h-[600px] bg-transparent">
             {messages.map((msg) => (
               <div key={msg.timestamp} className="chat chat-start mb-2">
                 <div className="chat-header">
@@ -75,6 +69,8 @@ const ChatWindow = ({ name, endpoint, auth }) => {
                     })}
                   </time>
                 </div>
+                {/* The green chat bubble is from chat-bubble-success (DaisyUI).
+                    If you want a different color, change or remove that class. */}
                 <div className="chat-bubble chat-bubble-success">
                   {msg.content}
                 </div>
