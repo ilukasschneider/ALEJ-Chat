@@ -110,7 +110,7 @@ def add_welcome_message(messages):
     print("Add welcome message")
     welcome_message = WELCOME_MESSAGE.copy()
     welcome_message["timestamp"] = datetime.now().isoformat()
-    messages.append(WELCOME_MESSAGE)
+    messages.append(welcome_message)
     return messages
 
 
