@@ -1,4 +1,4 @@
-import { getChannels } from "../../../lib/utils";
+import { getChannels } from "../../lib/utils";
 import { useEffect, useState } from "react";
 import ChatWindow from "./chatWindow";
 
