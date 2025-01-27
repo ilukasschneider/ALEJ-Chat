@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { getChannelMessages } from "../../../lib/utils";
+import { getChannelMessages } from "../../lib/utils";
 import { useEffect, useState } from "react";
 
 const ChatWindow = ({ name, endpoint, auth }) => {
