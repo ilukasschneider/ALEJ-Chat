@@ -41,7 +41,7 @@ const ChannelSelector = () => {
           {/* If a channel is selected -> show the ChatWindow */}
           {selectedChannel && (
             <ChatWindow
-              name={selectedChannel.name}
+              channelName={selectedChannel.name}
               endpoint={selectedChannel.endpoint}
               auth={selectedChannel.authkey}
               userName={userName}
