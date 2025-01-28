@@ -2,7 +2,7 @@ import ChannelSelector from "./ui/channelSelector";
 
 const Home = () => {
   return (
-    <div className="min-h-screen">
+    <div>
       <ChannelSelector />
       <div className="mt-22 px-4 flex flex-col items-center"></div>
     </div>

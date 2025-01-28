@@ -2,10 +2,11 @@ import PropTypes from "prop-types";
 import { getChannelMessages, postMessage } from "../../lib/utils";
 import { useEffect, useState } from "react";
 
-const ChatWindow = ({ name, endpoint, auth }) => {
+const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [messages, setMessages] = useState([]);
   const [userMessage, setUserMessage] = useState("");
-  const username = "JUSTUS PAUERS";
+
+  const currentUserName = userName ? userName : "Anonymous";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +26,7 @@ const ChatWindow = ({ name, endpoint, auth }) => {
   useEffect(() => {
     const sendMessage = async () => {
       try {
-        await postMessage(endpoint, auth, userMessage, username);
+        await postMessage(endpoint, auth, userMessage, currentUserName);
       } catch (err) {
         console.error("Failed to post message:", err);
       }
@@ -34,30 +35,34 @@ const ChatWindow = ({ name, endpoint, auth }) => {
     if (userMessage) {
       sendMessage();
     }
-  }, [userMessage, endpoint, auth, username]);
+  }, [userMessage, endpoint, auth, currentUserName]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-transparent">
-      {/*
-        - Removed bg-base-100 to avoid white page background
-        - If you want the entire page to be e.g. black, set bg-black or any other color here
-      */}
-
-      {/*
-        If you still want a border outline (like a “mockup-window”) without a fill,
-        you can keep the classes but switch background to transparent
-      */}
+    <div className="flex items-center justify-center bg-transparent">
       <div className="mockup-window border border-gray-400 bg-transparent max-w-4xl w-full mx-4">
         <div className="flex flex-col p-6 bg-transparent">
           {/* Channel info/title */}
           <div className="mb-4">
-            <h2 className="text-xl font-bold">Channel: {name}</h2>
+            <h2 className="text-xl font-bold">Channel: {channelName}</h2>
             <p className="text-sm">Endpoint: {endpoint}</p>
             <p className="text-sm">Auth Key: {auth}</p>
           </div>
 
           {/* Scrollable Chat Messages area */}
-          <div className="p-4 overflow-y-auto mb-4 max-h-[600px] bg-transparent">
+          <div
+            className="p-4 overflow-y-auto mb-4 max-h-[600px] bg-transparent pt-10"
+            style={{
+              scrollbarWidth: "none", // Firefox
+              msOverflowStyle: "none", // IE 10+
+            }}
+          >
+            <style>
+              {`
+                div::-webkit-scrollbar {
+                  display: none;
+                }
+              `}
+            </style>
             {messages.map((msg) => (
               <div key={msg.timestamp} className="chat chat-start mb-2">
                 <div className="chat-header">
@@ -69,11 +74,7 @@ const ChatWindow = ({ name, endpoint, auth }) => {
                     })}
                   </time>
                 </div>
-                {/* The green chat bubble is from chat-bubble-success (DaisyUI).
-                    If you want a different color, change or remove that class. */}
-                <div className="chat-bubble chat-bubble-success">
-                  {msg.content}
-                </div>
+                <div className="chat-bubble">{msg.content}</div>
               </div>
             ))}
           </div>
@@ -82,7 +83,7 @@ const ChatWindow = ({ name, endpoint, auth }) => {
           <input
             type="text"
             placeholder="Type here"
-            className="input input-bordered w-full text-black input-warning"
+            className="input input-bordered w-full input-ghost"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 setUserMessage(e.target.value);
@@ -97,9 +98,10 @@ const ChatWindow = ({ name, endpoint, auth }) => {
 };
 
 ChatWindow.propTypes = {
-  name: PropTypes.string.isRequired,
+  channelName: PropTypes.string.isRequired,
   endpoint: PropTypes.string.isRequired,
   auth: PropTypes.string.isRequired,
+  userName: PropTypes.string,
 };
 
 export default ChatWindow;
