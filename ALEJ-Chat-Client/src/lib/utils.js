@@ -61,3 +61,22 @@ export async function getChannelMessages(endpoint, authkey) {
   const messages = await response.json();
   return messages;
 }
+
+export async function postMessage(endpoint, authkey, text, name) {
+  const messageTimestamp = new Date().toISOString();
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: "authkey " + authkey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      content: text,
+      sender: name,
+      timestamp: messageTimestamp,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error("Error posting message: " + (await response.text()));
+  }
+}
