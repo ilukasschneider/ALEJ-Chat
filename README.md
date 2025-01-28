@@ -30,7 +30,7 @@ AI & the Web, winter term 2024/2025
 
 1. Have npm and nodejs installed
 
-2. change into frontend directory
+2. change into ALEJ-Chat-Client directory
 
 3. run 
     > npm install 
