@@ -6,6 +6,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [messages, setMessages] = useState([]);
   // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
+  const [isWelcomeVisible, setIsWelcomeVisible] = useState(true);
 
   const currentUserName = userName || "Anonymous";
 
@@ -78,6 +79,10 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     }
   }
 
+  const toggleWelcome = () => {
+    setIsWelcomeVisible(!isWelcomeVisible);
+  };
+
 
   return (
     <div className="flex items-center justify-center bg-transparent">
@@ -114,18 +119,34 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                     msg.extra?.includes("welcome-message")
                   );
                   return (
-                    <>
-                      <div className="chat-header">
-                        {welcomeMsg.sender}
-                        <time className="text-xs opacity-50 ml-2">
-                          {new Date(welcomeMsg.timestamp).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </time>
+                    <div
+                      className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
+                    >
+                      <div
+                        className="flex justify-between items-center cursor-pointer px-2 py-1"
+                        onClick={toggleWelcome}
+                      >
+                        <span className="text-sm font-semibold">Welcome Message</span>
+                        <button className="text-xs text-blue-500">
+                          {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
+                        </button>
                       </div>
-                      <div className="chat-bubble">{welcomeMsg.content}</div>
-                    </>
+
+                      {isWelcomeVisible && (
+                        <div className="mt-2">
+                          <div className="chat-header text-sm">
+                            {welcomeMsg.sender}
+                            <time className="text-xs opacity-50 ml-2">
+                              {new Date(welcomeMsg.timestamp).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </time>
+                          </div>
+                          <div className="chat-bubble text-sm">{welcomeMsg.content}</div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })()}
               </div>
