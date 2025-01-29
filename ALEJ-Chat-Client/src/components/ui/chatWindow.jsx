@@ -113,7 +113,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
             {/* Pin the welcome message at the absolute top -> Change bg color to actual bg color - havent found yet*/}
             {messages.some((msg) => msg.extra?.includes("welcome-message")) && (
-              <div className="sticky top-0 left-0 right-0 bg-neutral-800 z-20 p-4 shadow-md">
+              <div className="sticky top-0 left-0 right-0 bg-neutral-800 z-20 p-2 ">
                 {(() => {
                   const welcomeMsg = messages.find((msg) =>
                     msg.extra?.includes("welcome-message")
