@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 
 const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [messages, setMessages] = useState([]);
-  const [userMessage, setUserMessage] = useState("");
+  // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
 
   const currentUserName = userName || "Anonymous";
@@ -13,11 +13,11 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const messagesEndRef = useRef(null);
 
   // wait 5 seconds before allowing the user to send another message
-  useEffect(() => {
-    setTimeout(() => {
-      setInputStatus(true);
-    }, 8000);
-  }, [inputStatus]);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setInputStatus(true);
+  //   }, 8000);
+  // }, [inputStatus]);
 
   // automatically scroll to bottom whenever messages change
   useEffect(() => {
@@ -25,48 +25,74 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   }, [messages]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getChannelMessages(endpoint, auth);
-        setMessages(data);
-      } catch (err) {
-        console.error("Failed to fetch messages:", err);
-      }
-    };
 
     fetchData();
-    const intervalId = setInterval(fetchData, 1000);
+    const intervalId = setInterval(fetchData, 5000);
     return () => clearInterval(intervalId);
   }, [endpoint, auth]);
 
-  useEffect(() => {
-    const sendMessage = async () => {
-      try {
-        await postMessage(endpoint, auth, userMessage, currentUserName);
-      } catch (err) {
-        console.error("Failed to post message:", err);
-      }
-    };
+  
+  const fetchData = async () => {
+    try {
+      const data = await getChannelMessages(endpoint, auth);
 
-    if (userMessage) {
-      sendMessage();
+      if (!isDataEqual(data)) setMessages(data);
+    } catch (err) {
+      console.error("Failed to fetch messages:", err);
     }
-  }, [userMessage, endpoint, auth, currentUserName]);
+  };
+
+  const isDataEqual = (newMessages) => {
+    if (newMessages.length !== messages.length) {
+      return false;
+    }
+    return newMessages.every((obj, index) => {
+        return JSON.stringify(obj) === JSON.stringify(messages[index]);
+    });
+  }
+  // useEffect(() => {
+  //   const sendMessage = async () => {
+  //     try {
+  //       await postMessage(endpoint, auth, userMessage, currentUserName);
+  //     } catch (err) {
+  //       console.error("Failed to post message:", err);
+  //     }
+  //   };
+
+  //   if (userMessage) {
+  //     sendMessage();
+  //   }
+  // }, [userMessage, endpoint, auth, currentUserName]);
+
+
+  const onSendMessage = async (message) => {
+    setInputStatus(false)
+    if (!message) return
+    try {
+      await postMessage(endpoint, auth, message, currentUserName);
+    } catch (err) {
+      console.error("Failed to post message:", err);
+    } finally {
+      setInputStatus(true)
+      fetchData()
+    }
+  }
+
 
   return (
     <div className="flex items-center justify-center bg-transparent">
       <div className="mockup-window border border-gray-400 bg-transparent max-w-4xl w-full mx-4">
         <div className="flex flex-col p-6 bg-transparent">
           {/* Channel info and title */}
-          <div className="mb-4">
+          <div className="mb-2">
             <h2 className="text-xl font-bold">{channelName}</h2>
-            <p className="text-sm">Endpoint: {endpoint}</p>
-            <p className="text-sm">Auth Key: {auth}</p>
+            {/*<p className="text-sm">Endpoint: {endpoint}</p>
+            <p className="text-sm">Auth Key: {auth}</p>*/}
           </div>
 
           {/* Scrollable Chat Messages area */}
           <div
-            className="p-4 overflow-y-auto mb-4 max-h-[600px] bg-transparent pt-10"
+            className=" overflow-y-auto mb-4 max-h-[600px] bg-transparent"
             style={{
               scrollbarWidth: "none", // Firefox
               msOverflowStyle: "none", // IE 10+
@@ -79,23 +105,57 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                 }
               `}
             </style>
-            {messages.map((msg) => (
-              <div key={msg.timestamp} className="chat chat-start mb-2">
-                <div className="chat-header">
-                  {msg.sender}
-                  <time className="text-xs opacity-50 ml-2">
-                    {new Date(msg.timestamp).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </time>
-                </div>
-                <div className="chat-bubble">{msg.content}</div>
+
+            {/* Pin the welcome message at the absolute top -> Change bg color to actual bg color - havent found yet*/}
+            {messages.some((msg) => msg.extra?.includes("welcome-message")) && (
+              <div className="sticky top-0 left-0 right-0 bg-neutral-800 z-20 p-4 shadow-md">
+                {(() => {
+                  const welcomeMsg = messages.find((msg) =>
+                    msg.extra?.includes("welcome-message")
+                  );
+                  return (
+                    <>
+                      <div className="chat-header">
+                        {welcomeMsg.sender}
+                        <time className="text-xs opacity-50 ml-2">
+                          {new Date(welcomeMsg.timestamp).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </time>
+                      </div>
+                      <div className="chat-bubble">{welcomeMsg.content}</div>
+                    </>
+                  );
+                })()}
               </div>
-            ))}
+            )}
+
+            {/* Display all other messages except the pinned welcome message */}
+            <div className="pt-4">
+              {messages
+                .filter((msg) => !msg.extra?.includes("welcome-message"))
+                .map((msg) => (
+                  <div key={msg.timestamp} className="chat chat-start mb-2">
+                    <div className="chat-header">
+                      {msg.sender}
+                      <time className="text-xs opacity-50 ml-2">
+                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </div>
+                    <div className="chat-bubble">{msg.content}</div>
+                  </div>
+                ))}
+            </div>
+
             {/* div to scroll to -> Last Message */}
             <div ref={messagesEndRef} />
           </div>
+
+
 
           {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
           {inputStatus ? (
@@ -105,9 +165,10 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               className="input input-bordered w-full input-ghost"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  setUserMessage(e.target.value);
+                  onSendMessage(e.target.value)
+                  //setUserMessage(e.target.value);
                   e.target.value = "";
-                  setInputStatus(false);
+                  //setInputStatus(false);
                 }
               }}
             />
