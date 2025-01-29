@@ -124,8 +124,8 @@ def cut_old_messages(messages):
 def check_and_generate(message):
     client = OpenAI(api_key=API_KEY)
     model = "gpt-4o-mini"
-    rules = "First of all, if this message does not have anything to do with cooking just answer with the single word NO! Otherwise follow the instructions in the message. If you provide a recipe structure them the following way: Kitchen utensils, ingredients, instructions, the field instructions does not contain any subheaders."
-    question = f"Message from {message["sender"]}: {message["content"]} - {rules}"
+    rules = "First of all, if this message does not have anything to do with cooking just answer with the single word NO! Otherwise follow the instructions in the message. If you provide a recipe structure them the following way: Kitchen utensils, ingredients, instructions. Mark these by enclosing them with stars **. The field instructions does not contain any subheaders. Give the recipe a title, marked by double hashtags around the title like this: '##title##''"
+    question = f"Message from {message['sender']}: {message['content']} - {rules}"
 
     chat_completion = client.chat.completions.create(
         model=model,

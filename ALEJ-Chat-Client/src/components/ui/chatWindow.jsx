@@ -83,6 +83,37 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     setIsWelcomeVisible(!isWelcomeVisible);
   };
 
+ const formatMessageContent = (content) => {
+  // Split by titles and sections
+  const sections = content.split(/(?=##|\*\*)/);
+
+  return (
+    <div>
+      {sections.map((section, index) => {
+        if (section.startsWith("##")) {
+          // Display title larger and bold, remove ##
+          return <h3 key={index} className="font-bold text-lg mb-2">{section.replace("##", "").trim()}</h3>;
+        } else if (section.startsWith("**")) {
+          // Handle subsection title
+          const subsectionParts = section.split("\n");
+          const title = subsectionParts[0].replace(/\*\*/g, "").replace(":", "").trim(); // Remove ** and colon
+          const content = subsectionParts.slice(1).join("\n").trim(); // Content following the title
+
+          return (
+            <div key={index} className="mb-3">
+              <div className="underline font-semibold mb-1">{title}</div>
+              <div>{content}</div>
+            </div>
+          );
+        } else {
+          // Display content normally if not matched
+          return <div key={index}>{section.trim()}</div>;
+        }
+      })}
+    </div>
+  );
+};
+
 
   return (
     <div className="flex items-center justify-center bg-transparent">
@@ -157,18 +188,21 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               {messages
                 .filter((msg) => !msg.extra?.includes("welcome-message"))
                 .map((msg) => (
-                  <div key={msg.timestamp} className="chat chat-start mb-2">
-                    <div className="chat-header">
-                      {msg.sender}
-                      <time className="text-xs opacity-50 ml-2">
-                        {new Date(msg.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </time>
+                    <div key={msg.timestamp} className="chat chat-start mb-2">
+                      <div className="chat-header">
+                        {msg.sender}
+                        <time className="text-xs opacity-50 ml-2">
+                          {new Date(msg.timestamp).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </time>
+                      </div>
+                      <div className="chat-bubble">
+                        {formatMessageContent(msg.content)}
+                      </div>
+                      {/*<div className="chat-bubble">{msg.content}</div>*/}
                     </div>
-                    <div className="chat-bubble">{msg.content}</div>
-                  </div>
                 ))}
             </div>
 
