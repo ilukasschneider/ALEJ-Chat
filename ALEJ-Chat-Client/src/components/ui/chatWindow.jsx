@@ -83,7 +83,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     setIsWelcomeVisible(!isWelcomeVisible);
   };
 
- const formatMessageContent = (content) => {
+ const formatMessageContent = (content, extra) => {
   // Split by titles and sections
   const sections = content.split(/(?=##|\*\*)/);
 
@@ -92,7 +92,17 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
       {sections.map((section, index) => {
         if (section.startsWith("##")) {
           // Display title larger and bold, remove ##
-          return <h3 key={index} className="font-bold text-lg mb-2">{section.replace("##", "").trim()}</h3>;
+          let title = section.replace("##", "").trim();
+          return (
+            <h3 key={index} className="font-bold text-lg mb-2">
+              {title}
+              {extra && (
+                <span style={{ fontWeight: 'normal', fontSize: 'small', fontStyle: 'italic' }}>
+                  {" ("}{extra}{")"}
+                </span>
+              )}
+            </h3>
+          );
         } else if (section.startsWith("**")) {
           // Handle subsection title
           const subsectionParts = section.split("\n");
@@ -199,7 +209,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                         </time>
                       </div>
                       <div className="chat-bubble">
-                        {formatMessageContent(msg.content)}
+                        {formatMessageContent(msg.content, msg.extra)}
                       </div>
                       {/*<div className="chat-bubble">{msg.content}</div>*/}
                     </div>
