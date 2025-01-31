@@ -84,8 +84,23 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   };
 
  const formatMessageContent = (content, extra) => {
+   // Extract the nationality from the extra string
   // Split by titles and sections
-  const sections = content.split(/(?=##|\*\*)/);
+
+   const nationality = extra && extra.trim() !== '' ?
+  (extra.match(/Nationality:\s*(\w+)/i) || [])[1] || '' :
+  '';
+
+   const categoryMatch = extra && extra.match(/Category:\s*(\w+)/i);
+  const category = categoryMatch ? categoryMatch[1].toLowerCase() : '';
+
+  // Set emoji based on the category
+  const emoji = category === "sweet" ? "🍰" : category === "savory" ? "🍲" : '';
+
+  // Split by titles and sections, discard content before the first `##`
+  const sections = content.split(/(?=##|\*\*)/).filter((section, index) => {
+    return index !== 0 || section.startsWith("##");
+  });
 
   return (
     <div>
@@ -95,12 +110,16 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
           let title = section.replace("##", "").trim();
           return (
             <h3 key={index} className="font-bold text-lg mb-2">
+              {emoji && `${emoji} `}
               {title}
-              {extra && (
+              {emoji && `${emoji} `}
+              {nationality && (
                 <span style={{ fontWeight: 'normal', fontSize: 'small', fontStyle: 'italic' }}>
-                  {" ("}{extra}{")"}
+                  {" ("}{nationality}{")"}
                 </span>
               )}
+
+
             </h3>
           );
         } else if (section.startsWith("**")) {
