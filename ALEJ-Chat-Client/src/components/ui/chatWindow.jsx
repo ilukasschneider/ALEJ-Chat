@@ -97,10 +97,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   // Set emoji based on the category
   const emoji = category === "sweet" ? "🍰" : category === "savory" ? "🍲" : '';
 
-  // Split by titles and sections, discard content before the first `##`
-  const sections = content.split(/(?=##|\*\*)/).filter((section, index) => {
-    return index !== 0 || section.startsWith("##");
-  });
+  const sections = content.split(/(?=##|\*\*)/);
 
   return (
     <div>
