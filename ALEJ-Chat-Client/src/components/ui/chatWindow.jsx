@@ -38,8 +38,10 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     try {
       const data = await getChannelMessages(endpoint, auth);
 
-      if (!isDataEqual(data)) setMessages(data);
-      setFilteredMessages(data);
+      if (!isDataEqual(data)) {
+        setMessages(data);
+        setFilteredMessages(data);
+      }
     } catch (err) {
       console.error("Failed to fetch messages:", err);
     }
