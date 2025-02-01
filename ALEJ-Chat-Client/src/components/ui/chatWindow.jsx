@@ -181,6 +181,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   };
 
   return (
+  <>
     <div className="flex items-center justify-center bg-transparent">
       <div className="mockup-window border border-gray-400 bg-transparent max-w-4xl w-full mx-4">
         <div className="flex flex-col p-6 bg-transparent">
@@ -300,7 +301,6 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               ))}
             </div>
           )}
-          {filteredMessages.length !== messages.length && (
 
 
               <div className="flex justify-end my-4">
@@ -366,7 +366,8 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               )}
           </div>
       </div>
-    </div>
+    {/*</div>*/}
+ </>
   );
 };
 
