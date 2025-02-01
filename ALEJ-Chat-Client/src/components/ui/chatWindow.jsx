@@ -7,6 +7,8 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
   const [isWelcomeVisible, setIsWelcomeVisible] = useState(true);
+  const [showNationalities, setShowNationalities] = useState(false);
+  const [nationalities, setNationalities] = useState([]); // State for nationalities
 
   const currentUserName = userName || "Anonymous";
 
@@ -140,6 +142,23 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   );
 };
 
+ const extractNationalities = () => {
+   if (!showNationalities){
+     const uniqueNationalities = Array.from(
+      new Set(
+        messages
+          .map((msg) => {
+            const match = msg.extra && msg.extra.match(/Nationality:\s*(\w+)/i);
+            return match ? match[1] : null;
+          })
+          .filter(Boolean)
+      )
+    );
+     setNationalities(uniqueNationalities);
+   }
+    setShowNationalities(!showNationalities)
+  };
+
 
   return (
     <div className="flex items-center justify-center bg-transparent">
@@ -154,11 +173,11 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
           {/* Scrollable Chat Messages area */}
           <div
-            className=" overflow-y-auto mb-4 max-h-[600px] bg-transparent"
-            style={{
-              scrollbarWidth: "none", // Firefox
-              msOverflowStyle: "none", // IE 10+
-            }}
+              className=" overflow-y-auto mb-4 max-h-[600px] bg-transparent"
+              style={{
+                scrollbarWidth: "none", // Firefox
+                msOverflowStyle: "none", // IE 10+
+              }}
           >
             <style>
               {`
@@ -170,93 +189,103 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
             {/* Pin the welcome message at the absolute top -> Change bg color to actual bg color - havent found yet*/}
             {messages.some((msg) => msg.extra?.includes("welcome-message")) && (
-              <div className="sticky top-0 left-0 right-0 bg-neutral-800 z-20 p-2 ">
-                {(() => {
-                  const welcomeMsg = messages.find((msg) =>
-                    msg.extra?.includes("welcome-message")
-                  );
-                  return (
-                    <div
-                      className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
-                    >
-                      <div
-                        className="flex justify-between items-center cursor-pointer px-2 py-1"
-                        onClick={toggleWelcome}
-                      >
-                        <span className="text-sm font-semibold">Welcome Message</span>
-                        <button className="text-xs text-blue-500">
-                          {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
-                        </button>
-                      </div>
-
-                      {isWelcomeVisible && (
-                        <div className="mt-2">
-                          <div className="chat-header text-sm">
-                            {welcomeMsg.sender}
-                            <time className="text-xs opacity-50 ml-2">
-                              {new Date(welcomeMsg.timestamp).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </time>
+                <div className="sticky top-0 left-0 right-0 bg-neutral-800 z-20 p-2 ">
+                  {(() => {
+                    const welcomeMsg = messages.find((msg) =>
+                        msg.extra?.includes("welcome-message")
+                    );
+                    return (
+                        <div
+                            className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
+                        >
+                          <div
+                              className="flex justify-between items-center cursor-pointer px-2 py-1"
+                              onClick={toggleWelcome}
+                          >
+                            <span className="text-sm font-semibold">Welcome Message</span>
+                            <button className="text-xs text-blue-500">
+                              {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
+                            </button>
                           </div>
-                          <div className="chat-bubble text-sm">{welcomeMsg.content}</div>
+
+                          {isWelcomeVisible && (
+                              <div className="mt-2">
+                                <div className="chat-header text-sm">
+                                  {welcomeMsg.sender}
+                                  <time className="text-xs opacity-50 ml-2">
+                                    {new Date(welcomeMsg.timestamp).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </time>
+                                </div>
+                                <div className="chat-bubble text-sm">{welcomeMsg.content}</div>
+                              </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
+                    );
+                  })()}
+                </div>
             )}
 
             {/* Display all other messages except the pinned welcome message */}
             <div className="pt-4">
               {messages
-                .filter((msg) => !msg.extra?.includes("welcome-message"))
-                .map((msg) => (
-                    <div key={msg.timestamp} className="chat chat-start mb-2">
-                      <div className="chat-header">
-                        {msg.sender}
-                        <time className="text-xs opacity-50 ml-2">
-                          {new Date(msg.timestamp).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </time>
+                  .filter((msg) => !msg.extra?.includes("welcome-message"))
+                  .map((msg) => (
+                      <div key={msg.timestamp} className="chat chat-start mb-2">
+                        <div className="chat-header">
+                          {msg.sender}
+                          <time className="text-xs opacity-50 ml-2">
+                            {new Date(msg.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </time>
+                        </div>
+                        <div className="chat-bubble">
+                          {formatMessageContent(msg.content, msg.extra)}
+                        </div>
+                        {/*<div className="chat-bubble">{msg.content}</div>*/}
                       </div>
-                      <div className="chat-bubble">
-                        {formatMessageContent(msg.content, msg.extra)}
-                      </div>
-                      {/*<div className="chat-bubble">{msg.content}</div>*/}
-                    </div>
-                ))}
+                  ))}
             </div>
 
             {/* div to scroll to -> Last Message */}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef}/>
           </div>
 
 
-
           {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
+          <div className="flex justify-end my-4">
+            <button className="btn bg-blue-500 text-white" onClick={extractNationalities}>
+              Filter
+            </button>
+          </div>
+           {showNationalities && (
+            <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
+              {nationalities.map((nat, index) => (
+                <p key={index}>{nat}</p>
+              ))}
+            </div>)}
           {inputStatus ? (
-            <input
-              type="text"
-              placeholder="type here and press enter to send a message"
-              className="input input-bordered w-full input-ghost"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onSendMessage(e.target.value)
-                  //setUserMessage(e.target.value);
-                  e.target.value = "";
-                  //setInputStatus(false);
-                }
-              }}
-            />
+              <input
+                  type="text"
+                  placeholder="type here and press enter to send a message"
+                  className="input input-bordered w-full input-ghost"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      onSendMessage(e.target.value)
+                      //setUserMessage(e.target.value);
+                      e.target.value = "";
+                      //setInputStatus(false);
+                    }
+                  }}
+              />
           ) : (
-            <div className="flex justify-center">
-              <span className="loading loading-infinity loading-lg"></span>
-            </div>
+              <div className="flex justify-center">
+                <span className="loading loading-infinity loading-lg"></span>
+              </div>
           )}
         </div>
       </div>
