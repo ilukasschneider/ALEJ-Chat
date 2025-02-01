@@ -268,7 +268,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               </div>
 
 
-              {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
+
               <div className="flex justify-end my-4">
                   <button className="btn bg-blue-500 text-white" onClick={extractNationalities}>
                       Filter
@@ -290,6 +290,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               </button>
             </div>
           )}
+              {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
               {inputStatus ? (
                   <input
                       type="text"
