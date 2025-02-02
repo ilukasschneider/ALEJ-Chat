@@ -186,18 +186,20 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   return (
     <>
       <div className="flex items-center justify-center bg-transparent">
-        <div className="mockup-window border border-gray-400 bg-transparent max-w-4xl w-full mx-4">
+        <div className="mockup-window border border-gray-400 bg-transparent max-w-8xl w-full mx-4">
           <div className="flex flex-col p-6 bg-transparent">
             {/* Channel info and title */}
             <div className="mb-2">
-              <h2 className="text-xl font-bold">{channelName}</h2>
+              <h2 className="text-4xl font-bold relative bottom-4">
+                {channelName}
+              </h2>
               {/*<p className="text-sm">Endpoint: {endpoint}</p>
             <p className="text-sm">Auth Key: {auth}</p>*/}
             </div>
 
             {/* Scrollable Chat Messages area */}
             <div
-              className=" overflow-y-auto mb-4 max-h-[600px] bg-transparent"
+              className=" overflow-y-auto mb-4 max-h-[700px] bg-transparent"
               style={{
                 scrollbarWidth: "none", // Firefox
                 msOverflowStyle: "none", // IE 10+
@@ -238,18 +240,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
                         {isWelcomeVisible && (
                           <div className="mt-2">
-                            <div className="chat-header text-sm">
-                              {welcomeMsg.sender}
-                              <time className="text-xs opacity-50 ml-2">
-                                {new Date(
-                                  welcomeMsg.timestamp,
-                                ).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </time>
-                            </div>
-                            <div className="chat-bubble bg-black text-sm">
+                            <div className="chat-bubble bg-black text-xl">
                               {welcomeMsg.content}
                             </div>
                           </div>
@@ -265,7 +256,10 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                 {filteredMessages
                   .filter((msg) => !msg.extra?.includes("welcome-message"))
                   .map((msg) => (
-                    <div key={msg.timestamp} className="chat chat-start mb-2">
+                    <div
+                      key={msg.timestamp}
+                      className={`chat ${msg.sender === currentUserName ? " chat-end" : "chat-start"} mb-2`}
+                    >
                       <div className="chat-header">
                         {msg.sender}
                         <time className="text-xs opacity-50 ml-2">
@@ -275,7 +269,9 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                           })}
                         </time>
                       </div>
-                      <div className="chat-bubble">
+                      <div
+                        className={`chat-bubble ${msg.sender === currentUserName ? " chat-bubble-primary" : "chat-bubble"}`}
+                      >
                         {formatMessageContent(msg.content, msg.extra)}
                       </div>
                       {/*<div className="chat-bubble">{msg.content}</div>*/}
