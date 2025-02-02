@@ -7,7 +7,7 @@ This repository contains the code for the third project in the university course
 
 ## Prerequisites
 Make sure you have the following installed and updated:
-- **Pytho**  
+- **Python**  
 - **Node.js** and **npm**
 
 ## Installation & Setup
