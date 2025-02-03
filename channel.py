@@ -147,7 +147,7 @@ def check_and_generate(message):
         if '**nationality:' in answer.lower():
             print("in if")
             nationality, answer = get_word_after_nationality(answer)
-            extra += f'Nationality: {nationality} '
+            extra += f'Nationality: {nationality} ,'
 
         if '**category:' in answer.lower():
             category, answer = get_category(answer)
@@ -170,11 +170,11 @@ def get_category(text):
 
 def get_word_after_nationality(text):
     # Regular expression to find "nationality" followed by a word
-    match = re.search(r'nationality:\s+(\w+)', text, re.IGNORECASE)
+    match = re.search(r'nationality:\s*([^*]+)', text, re.IGNORECASE)
     if match:
-        following_word = match.group(1)
+        following_word = match.group(1).strip()
         print("FOLLOWING WORD: ", following_word)
-        cleaned_text = re.sub(r'\*\*Nationality:\s*\w+\*\*', '', text, flags=re.IGNORECASE).strip()
+        cleaned_text = re.sub(r'\*\*Nationality:\s*([^*]+)\*\*', '', text, flags=re.IGNORECASE).strip()
         print(cleaned_text)
         return following_word, cleaned_text
     return None

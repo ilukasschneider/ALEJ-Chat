@@ -91,9 +91,9 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     // Split by titles and sections
 
     const nationality =
-      extra && extra.trim() !== ""
-        ? (extra.match(/Nationality:\s*(\w+)/i) || [])[1] || ""
-        : "";
+  extra && extra.trim() !== ""
+    ? (extra.match(/Nationality:\s*([^,]+)/i) || [])[1]?.trim() || ""
+    : "";
 
     const categoryMatch = extra && extra.match(/Category:\s*(\w+)/i);
     const category = categoryMatch ? categoryMatch[1].toLowerCase() : "";
@@ -155,22 +155,22 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   };
 
   const extractNationalities = () => {
-    if (!showNationalities) {
-      const uniqueNationalities = Array.from(
-        new Set(
-          messages
-            .map((msg) => {
-              const match =
-                msg.extra && msg.extra.match(/Nationality:\s*(\w+)/i);
-              return match ? match[1] : null;
-            })
-            .filter(Boolean),
-        ),
-      );
-      setNationalities(uniqueNationalities);
-    }
-    setShowNationalities(!showNationalities);
-  };
+  if (!showNationalities) {
+    const uniqueNationalities = Array.from(
+      new Set(
+        messages
+          .map((msg) => {
+            const match =
+              msg.extra && msg.extra.match(/Nationality:\s*([^,]+)/i);
+            return match ? match[1].trim() : null;
+          })
+          .filter(Boolean),
+      ),
+    );
+    setNationalities(uniqueNationalities);
+  }
+  setShowNationalities(!showNationalities);
+};
 
   const filterMessagesByNationality = (nationality) => {
     const filtered = messages.filter(
@@ -290,18 +290,19 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               </button>
             </div>
             {showNationalities && (
-              <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
-                {nationalities.map((nat, index) => (
-                  <p
-                    key={index}
-                    onClick={() => filterMessagesByNationality(nat)}
-                    className="cursor-pointer mb-1"
-                  >
-                    {nat}
-                  </p>
-                ))}
-              </div>
-            )}
+  <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
+    {nationalities.map((nat, index) => (
+      <p
+        key={index}
+        onClick={() => filterMessagesByNationality(nat)}
+        className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"
+        style={{ borderRadius: "4px", transition: "background-color 0.3s" }}
+      >
+        {nat}
+      </p>
+    ))}
+  </div>
+)}
             {filteredMessages.length !== messages.length && (
               <div className="flex justify-end my-2">
                 <button className="btn-ghost" onClick={showAllMessages}>
