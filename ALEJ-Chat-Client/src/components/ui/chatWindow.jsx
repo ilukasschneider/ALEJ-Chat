@@ -8,8 +8,12 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [inputStatus, setInputStatus] = useState(true);
   const [isWelcomeVisible, setIsWelcomeVisible] = useState(true);
   const [showNationalities, setShowNationalities] = useState(false);
-  const [nationalities, setNationalities] = useState([]); // State for nationalities
+  const [showTastes, setShowTastes] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
+  const [nationalities, setNationalities] = useState([]);
+  const [tastes, setTastes] = useState([]);// State for nationalities
   const [filteredMessages, setFilteredMessages] = useState([]);
+
 
   const currentUserName = userName || "Anonymous";
 
@@ -84,6 +88,14 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
   const toggleWelcome = () => {
     setIsWelcomeVisible(!isWelcomeVisible);
+  };
+
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+    if (showFilters) {
+      setShowNationalities(false); // Hide nationalities when hiding filters
+      setShowTastes(false); // Hide tastes when hiding filters
+    }
   };
 
   const formatMessageContent = (content, extra) => {
@@ -172,11 +184,31 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   setShowNationalities(!showNationalities);
 };
 
+  const extractTastes = () => {
+    if (!showTastes){
+      const uniqueTastes = Array.from(
+          new Set(messages.map((msg) => { const match = msg.extra && msg.extra.match(/Category:\s*(\w+)/i);
+          return match ? match[1].toLowerCase(): null;
+          }).filter(Boolean),
+              ),
+      );
+      setTastes(uniqueTastes);
+    }
+    setShowTastes(!showTastes);
+  }
+
   const filterMessagesByNationality = (nationality) => {
     const filtered = messages.filter(
       (msg) => msg.extra && msg.extra.includes(`Nationality: ${nationality}`),
     );
     setFilteredMessages(filtered);
+  };
+
+  const filterMessagesByTaste = (taste) => {
+    const filtered = messages.filter(
+        (msg) => msg.extra && msg.extra.includes(`Category: ${taste}`),
+    );
+    setFilteredMessages((filtered));
   };
 
   const showAllMessages = () => {
@@ -199,11 +231,11 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
             {/* Scrollable Chat Messages area */}
             <div
-              className=" overflow-y-auto mb-4 max-h-[700px] bg-transparent"
-              style={{
-                scrollbarWidth: "none", // Firefox
-                msOverflowStyle: "none", // IE 10+
-              }}
+                className=" overflow-y-auto mb-4 max-h-[700px] bg-transparent"
+                style={{
+                  scrollbarWidth: "none", // Firefox
+                  msOverflowStyle: "none", // IE 10+
+                }}
             >
               <style>
                 {`
@@ -215,119 +247,143 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
               {/* Pin the welcome message at the absolute top -> Change bg color to actual bg color - havent found yet*/}
               {messages.some((msg) =>
-                msg.extra?.includes("welcome-message"),
+                  msg.extra?.includes("welcome-message"),
               ) && (
-                <div className="sticky top-0 left-0 right-0 bg-black rounded-xl z-20 p-2 ">
-                  {(() => {
-                    const welcomeMsg = messages.find((msg) =>
-                      msg.extra?.includes("welcome-message"),
-                    );
-                    return (
-                      <div
-                        className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
-                      >
-                        <div
-                          className="flex justify-between items-center cursor-pointer px-2 py-1"
-                          onClick={toggleWelcome}
-                        >
+                  <div className="sticky top-0 left-0 right-0 bg-black rounded-xl z-20 p-2 ">
+                    {(() => {
+                      const welcomeMsg = messages.find((msg) =>
+                          msg.extra?.includes("welcome-message"),
+                      );
+                      return (
+                          <div
+                              className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
+                          >
+                            <div
+                                className="flex justify-between items-center cursor-pointer px-2 py-1"
+                                onClick={toggleWelcome}
+                            >
                           <span className="text-sm font-semibold">
                             Welcome Message
                           </span>
-                          <button className="btn-ghost">
-                            {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
-                          </button>
-                        </div>
-
-                        {isWelcomeVisible && (
-                          <div className="mt-2">
-                            <div className="chat-bubble bg-black text-xl">
-                              {welcomeMsg.content}
+                              <button className="btn-ghost">
+                                {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
+                              </button>
                             </div>
+
+                            {isWelcomeVisible && (
+                                <div className="mt-2">
+                                  <div className="chat-bubble bg-black text-xl">
+                                    {welcomeMsg.content}
+                                  </div>
+                                </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+                      );
+                    })()}
+                  </div>
               )}
 
               {/* Display all other messages except the pinned welcome message */}
               <div className="pt-4">
                 {filteredMessages
-                  .filter((msg) => !msg.extra?.includes("welcome-message"))
-                  .map((msg) => (
-                    <div
-                      key={msg.timestamp}
-                      className={`chat ${msg.sender === currentUserName ? " chat-end" : "chat-start"} mb-2`}
-                    >
-                      <div className="chat-header">
-                        {msg.sender}
-                        <time className="text-xs opacity-50 ml-2">
-                          {new Date(msg.timestamp).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </time>
-                      </div>
-                      <div
-                        className={`chat-bubble ${msg.sender === currentUserName ? " chat-bubble-primary" : "chat-bubble"}`}
-                      >
-                        {formatMessageContent(msg.content, msg.extra)}
-                      </div>
-                      {/*<div className="chat-bubble">{msg.content}</div>*/}
-                    </div>
-                  ))}
+                    .filter((msg) => !msg.extra?.includes("welcome-message"))
+                    .map((msg) => (
+                        <div
+                            key={msg.timestamp}
+                            className={`chat ${msg.sender === currentUserName ? " chat-end" : "chat-start"} mb-2`}
+                        >
+                          <div className="chat-header">
+                            {msg.sender}
+                            <time className="text-xs opacity-50 ml-2">
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </time>
+                          </div>
+                          <div
+                              className={`chat-bubble ${msg.sender === currentUserName ? " chat-bubble-primary" : "chat-bubble"}`}
+                          >
+                            {formatMessageContent(msg.content, msg.extra)}
+                          </div>
+                          {/*<div className="chat-bubble">{msg.content}</div>*/}
+                        </div>
+                    ))}
               </div>
 
               {/* div to scroll to -> Last Message */}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef}/>
             </div>
 
-            {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
             <div className="flex justify-end my-4">
-              <button className="btn-ghost" onClick={extractNationalities}>
-                Filter
+              <button className="btn-ghost" onClick={toggleFilters}>
+                {showFilters ? "Hide Filters ▲" : "Show Filters ▼"}
               </button>
             </div>
-            {showNationalities && (
-  <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
-    {nationalities.map((nat, index) => (
-      <p
-        key={index}
-        onClick={() => filterMessagesByNationality(nat)}
-        className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"
-        style={{ borderRadius: "4px", transition: "background-color 0.3s" }}
-      >
-        {nat}
-      </p>
-    ))}
-  </div>
-)}
-            {filteredMessages.length !== messages.length && (
-              <div className="flex justify-end my-2">
-                <button className="btn-ghost" onClick={showAllMessages}>
-                  Show All Messages
+            {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
+            {showFilters && (
+              <div className="flex justify-end my-4">
+                <button className="btn-ghost" onClick={extractNationalities}>
+                  Nationalities
+                </button>
+                <button className="btn-ghost ml-2" onClick={extractTastes}>
+                  Taste
                 </button>
               </div>
             )}
+            {showNationalities && (
+                <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
+                  {nationalities.map((nat, index) => (
+                      <p
+                          key={index}
+                          onClick={() => filterMessagesByNationality(nat)}
+                          className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"
+                          style={{borderRadius: "4px", transition: "background-color 0.3s"}}
+                      >
+                        {nat}
+                      </p>
+                  ))}
+                </div>
+            )}
+            {showTastes && (
+                <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
+                  {tastes.map((taste, index) => (
+                      <p
+                          key={index}
+                          onClick={() => filterMessagesByTaste(taste)}
+                          className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"
+                          style={{borderRadius: "4px", transition: "background-color 0.3s"}}
+                      >
+                        {taste}
+                      </p>
+                  ))}
+                </div>
+            )}
+            {filteredMessages.length !== messages.length && (
+                <div className="flex justify-end my-2">
+                  <button className="btn-ghost" onClick={showAllMessages}>
+                    Show All Messages
+                  </button>
+                </div>
+            )}
             {inputStatus ? (
-              <input
-                type="text"
-                placeholder="type here and press enter to send a message"
-                className="input input-bordered w-full input-ghost"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    onSendMessage(e.target.value);
-                    //setUserMessage(e.target.value);
-                    e.target.value = "";
-                    //setInputStatus(false);
-                  }
-                }}
-              />
+                <input
+                    type="text"
+                    placeholder="type here and press enter to send a message"
+                    className="input input-bordered w-full input-ghost"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        onSendMessage(e.target.value);
+                        //setUserMessage(e.target.value);
+                        e.target.value = "";
+                        //setInputStatus(false);
+                      }
+                    }}
+                />
             ) : (
-              <div className="flex justify-center">
-                <span className="loading loading-infinity loading-lg"></span>
-              </div>
+                <div className="flex justify-center">
+                  <span className="loading loading-infinity loading-lg"></span>
+                </div>
             )}
           </div>
         </div>
