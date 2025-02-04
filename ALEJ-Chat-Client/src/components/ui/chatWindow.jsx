@@ -6,10 +6,16 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [messages, setMessages] = useState([]);
   // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
+  // Variables to toggle visibility of different components
   const [isWelcomeVisible, setIsWelcomeVisible] = useState(true);
   const [showNationalities, setShowNationalities] = useState(false);
-  const [nationalities, setNationalities] = useState([]); // State for nationalities
+  const [showTastes, setShowTastes] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
+  // filtering components
+  const [nationalities, setNationalities] = useState([]);
+  const [tastes, setTastes] = useState([]);// State for nationalities
   const [filteredMessages, setFilteredMessages] = useState([]);
+
 
   const currentUserName = userName || "Anonymous";
 
@@ -28,12 +34,14 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // automatically fetch messages at regular intervals
   useEffect(() => {
     fetchData();
     const intervalId = setInterval(fetchData, 5000);
     return () => clearInterval(intervalId);
   }, [endpoint, auth]);
 
+  // Function to fetch data from the API
   const fetchData = async () => {
     try {
       const data = await getChannelMessages(endpoint, auth);
@@ -46,7 +54,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
       console.error("Failed to fetch messages:", err);
     }
   };
-
+  // determine if the new data is equal to the current state data
   const isDataEqual = (newMessages) => {
     if (newMessages.length !== messages.length) {
       return false;
@@ -69,8 +77,9 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   //   }
   // }, [userMessage, endpoint, auth, currentUserName]);
 
+  // send a message to the server
   const onSendMessage = async (message) => {
-    setInputStatus(false);
+    setInputStatus(false); // disable the input area
     if (!message) return;
     try {
       await postMessage(endpoint, auth, message, currentUserName);
@@ -82,33 +91,45 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     }
   };
 
+  // toggle the visibility of the welcome message
   const toggleWelcome = () => {
     setIsWelcomeVisible(!isWelcomeVisible);
   };
 
-  const formatMessageContent = (content, extra) => {
-    // Extract the nationality from the extra string
-    // Split by titles and sections
+  // toggle the visibility of the filters
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+    if (showFilters) {
+      setShowNationalities(false); // Hide nationalities when hiding filters
+      setShowTastes(false); // Hide tastes when hiding filters
+    }
+  };
 
+  // formating of the messages to display them in a clear and structured way
+  const formatMessageContent = (content, extra) => {
+
+    // extract the nationality of the extra field
     const nationality =
       extra && extra.trim() !== ""
-        ? (extra.match(/Nationality:\s*(\w+)/i) || [])[1] || ""
-        : "";
-
+      ? (extra.match(/Nationality:\s*([^,]+)/i) || [])[1]?.trim() || ""
+      : "";
     const categoryMatch = extra && extra.match(/Category:\s*(\w+)/i);
+
+    // extract the taste category of the extra field
     const category = categoryMatch ? categoryMatch[1].toLowerCase() : "";
 
     // Set emoji based on the category
     const emoji =
       category === "sweet" ? "🍰" : category === "savory" ? "🍲" : "";
 
+    // extract the title and the subsections of the recipe
     const sections = content.split(/(?=##|\*\*)/);
 
     return (
       <div>
         {sections.map((section, index) => {
           if (section.startsWith("##")) {
-            // Display title larger and bold, remove ##
+            // Display title larger and bold, remove ##, add the emoji around the title and the nationality
             let title = section.replace("##", "").trim();
             return (
               <h3 key={index} className="font-bold text-lg mb-2">
@@ -130,6 +151,8 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                 )}
               </h3>
             );
+
+          // if the section starts with ** it is a subsection
           } else if (section.startsWith("**")) {
             // Handle subsection title
             const subsectionParts = section.split("\n");
@@ -154,24 +177,44 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     );
   };
 
+  // store the unique nationalities of all the messages
+  // is called when the respective filter button is clicked
+  // toggles the visibility of the filter choices
   const extractNationalities = () => {
-    if (!showNationalities) {
-      const uniqueNationalities = Array.from(
-        new Set(
-          messages
-            .map((msg) => {
-              const match =
-                msg.extra && msg.extra.match(/Nationality:\s*(\w+)/i);
-              return match ? match[1] : null;
-            })
-            .filter(Boolean),
-        ),
+  if (!showNationalities) {
+    const uniqueNationalities = Array.from(
+      new Set(
+        messages
+          .map((msg) => {
+            const match =
+              msg.extra && msg.extra.match(/Nationality:\s*([^,]+)/i);
+            return match ? match[1].trim() : null;
+          })
+          .filter(Boolean),
+      ),
+    );
+    setNationalities(uniqueNationalities);
+  }
+  setShowNationalities(!showNationalities);
+};
+
+  // store the unique tastes of all the messages
+  // is called when the respective filter button is clicked
+  // toggles the visibility of the filter choices
+  const extractTastes = () => {
+    if (!showTastes){
+      const uniqueTastes = Array.from(
+          new Set(messages.map((msg) => { const match = msg.extra && msg.extra.match(/Category:\s*(\w+)/i);
+          return match ? match[1].toLowerCase(): null;
+          }).filter(Boolean),
+              ),
       );
-      setNationalities(uniqueNationalities);
+      setTastes(uniqueTastes);
     }
-    setShowNationalities(!showNationalities);
+    setShowTastes(!showTastes);
   };
 
+  // filters the messages by a specified nationality
   const filterMessagesByNationality = (nationality) => {
     const filtered = messages.filter(
       (msg) => msg.extra && msg.extra.includes(`Nationality: ${nationality}`),
@@ -179,8 +222,18 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     setFilteredMessages(filtered);
   };
 
+  // filters the messages by a specified taste
+  const filterMessagesByTaste = (taste) => {
+    const filtered = messages.filter(
+        (msg) => msg.extra && msg.extra.includes(`Category: ${taste}`),
+    );
+    setFilteredMessages((filtered));
+  };
+
+  // is called if the respective button is clicked
+  // resets the filtered messages to all messages available
   const showAllMessages = () => {
-    setFilteredMessages(messages); // SHOW ALL MESSAGES
+    setFilteredMessages(messages);
   };
 
   return (
@@ -199,11 +252,11 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
             {/* Scrollable Chat Messages area */}
             <div
-              className=" overflow-y-auto mb-4 max-h-[700px] bg-transparent"
-              style={{
-                scrollbarWidth: "none", // Firefox
-                msOverflowStyle: "none", // IE 10+
-              }}
+                className=" overflow-y-auto mb-4 max-h-[700px] bg-transparent"
+                style={{
+                  scrollbarWidth: "none", // Firefox
+                  msOverflowStyle: "none", // IE 10+
+                }}
             >
               <style>
                 {`
@@ -215,118 +268,151 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
               {/* Pin the welcome message at the absolute top -> Change bg color to actual bg color - havent found yet*/}
               {messages.some((msg) =>
-                msg.extra?.includes("welcome-message"),
+                  msg.extra?.includes("welcome-message"),
               ) && (
-                <div className="sticky top-0 left-0 right-0 bg-black rounded-xl z-20 p-2 ">
-                  {(() => {
-                    const welcomeMsg = messages.find((msg) =>
-                      msg.extra?.includes("welcome-message"),
-                    );
-                    return (
-                      <div
-                        className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
-                      >
-                        <div
-                          className="flex justify-between items-center cursor-pointer px-2 py-1"
-                          onClick={toggleWelcome}
-                        >
+                  <div className="sticky top-0 left-0 right-0 bg-black rounded-xl z-20 p-2 ">
+                    {(() => {
+                      const welcomeMsg = messages.find((msg) =>
+                          msg.extra?.includes("welcome-message"),
+                      );
+                      return (
+                          <div
+                              className={`sticky top-0 left-0 right-0 z-20 rounded transition-all duration-300 ease-in-out`}
+                          >
+                            <div
+                                className="flex justify-between items-center cursor-pointer px-2 py-1"
+                                onClick={toggleWelcome}
+                            >
                           <span className="text-sm font-semibold">
                             Welcome Message
+                          {/*  functionality to hide or show the welcome message*/}
                           </span>
-                          <button className="btn-ghost">
-                            {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
-                          </button>
-                        </div>
-
-                        {isWelcomeVisible && (
-                          <div className="mt-2">
-                            <div className="chat-bubble bg-black text-xl">
-                              {welcomeMsg.content}
+                              <button className="btn-ghost">
+                                {isWelcomeVisible ? "Hide ▲" : "Show ▼"}
+                              </button>
                             </div>
+
+                            {isWelcomeVisible && (
+                                <div className="mt-2">
+                                  <div className="chat-bubble bg-black text-xl">
+                                    {welcomeMsg.content}
+                                  </div>
+                                </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+                      );
+                    })()}
+                  </div>
               )}
 
               {/* Display all other messages except the pinned welcome message */}
               <div className="pt-4">
                 {filteredMessages
-                  .filter((msg) => !msg.extra?.includes("welcome-message"))
-                  .map((msg) => (
-                    <div
-                      key={msg.timestamp}
-                      className={`chat ${msg.sender === currentUserName ? " chat-end" : "chat-start"} mb-2`}
-                    >
-                      <div className="chat-header">
-                        {msg.sender}
-                        <time className="text-xs opacity-50 ml-2">
-                          {new Date(msg.timestamp).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </time>
-                      </div>
-                      <div
-                        className={`chat-bubble ${msg.sender === currentUserName ? " chat-bubble-primary" : "chat-bubble"}`}
-                      >
-                        {formatMessageContent(msg.content, msg.extra)}
-                      </div>
-                      {/*<div className="chat-bubble">{msg.content}</div>*/}
-                    </div>
-                  ))}
+                    .filter((msg) => !msg.extra?.includes("welcome-message"))
+                    .map((msg) => (
+                        <div
+                            key={msg.timestamp}
+                            className={`chat ${msg.sender === currentUserName ? " chat-end" : "chat-start"} mb-2`}
+                        >
+                          <div className="chat-header">
+                            {msg.sender}
+                            <time className="text-xs opacity-50 ml-2">
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </time>
+                          </div>
+                          <div
+                              className={`chat-bubble ${msg.sender === currentUserName ? " chat-bubble-primary" : "chat-bubble"}`}
+                          >
+                            {/*display the messages in the desired format*/}
+                            {formatMessageContent(msg.content, msg.extra)}
+                          </div>
+                          {/*<div className="chat-bubble">{msg.content}</div>*/}
+                        </div>
+                    ))}
               </div>
 
               {/* div to scroll to -> Last Message */}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef}/>
             </div>
 
-            {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
+            {/*button to hide and show the filter buttons*/}
             <div className="flex justify-end my-4">
-              <button className="btn-ghost" onClick={extractNationalities}>
-                Filter
+              <button className="btn-ghost" onClick={toggleFilters}>
+                {showFilters ? "Hide Filters ▲" : "Show Filters ▼"}
               </button>
             </div>
-            {showNationalities && (
-              <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
-                {nationalities.map((nat, index) => (
-                  <p
-                    key={index}
-                    onClick={() => filterMessagesByNationality(nat)}
-                    className="cursor-pointer mb-1"
-                  >
-                    {nat}
-                  </p>
-                ))}
-              </div>
-            )}
-            {filteredMessages.length !== messages.length && (
-              <div className="flex justify-end my-2">
-                <button className="btn-ghost" onClick={showAllMessages}>
-                  Show All Messages
+            {/*the two filter buttons nationalities and taste*/}
+            {showFilters && (
+              <div className="flex justify-end my-4">
+                <button className="btn-ghost" onClick={extractNationalities}>
+                  Nationalities
+                </button>
+                <button className="btn-ghost ml-2" onClick={extractTastes}>
+                  Taste
                 </button>
               </div>
             )}
+            {/*if one of the filter buttons is clicked show the different choices they provide*/}
+            {showNationalities && (
+                <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
+                  {nationalities.map((nat, index) => (
+                      // background of the choices marks the choices when hovering over them
+                      <p
+                          key={index}
+                          onClick={() => filterMessagesByNationality(nat)}
+                          className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"
+                          style={{borderRadius: "4px", transition: "background-color 0.3s"}}
+                      >
+                        {nat}
+                      </p>
+                  ))}
+                </div>
+            )}
+            {/*same functionality as the button above*/}
+            {showTastes && (
+                <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
+                  {tastes.map((taste, index) => (
+                      <p
+                          key={index}
+                          onClick={() => filterMessagesByTaste(taste)}
+                          className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"
+                          style={{borderRadius: "4px", transition: "background-color 0.3s"}}
+                      >
+                        {taste}
+                      </p>
+                  ))}
+                </div>
+            )}
+            {/*if only filtered messages are shown a button appears offering the possibility to show all messages again*/}
+            {filteredMessages.length !== messages.length && (
+                <div className="flex justify-end my-2">
+                  <button className="btn-ghost" onClick={showAllMessages}>
+                    Show All Messages
+                  </button>
+                </div>
+            )}
+            {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
             {inputStatus ? (
-              <input
-                type="text"
-                placeholder="type here and press enter to send a message"
-                className="input input-bordered w-full input-ghost"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    onSendMessage(e.target.value);
-                    //setUserMessage(e.target.value);
-                    e.target.value = "";
-                    //setInputStatus(false);
-                  }
-                }}
-              />
+                <input
+                    type="text"
+                    placeholder="type here and press enter to send a message"
+                    className="input input-bordered w-full input-ghost"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        onSendMessage(e.target.value);
+                        //setUserMessage(e.target.value);
+                        e.target.value = "";
+                        //setInputStatus(false);
+                      }
+                    }}
+                />
             ) : (
-              <div className="flex justify-center">
-                <span className="loading loading-infinity loading-lg"></span>
-              </div>
+                <div className="flex justify-center">
+                  <span className="loading loading-infinity loading-lg"></span>
+                </div>
             )}
           </div>
         </div>
