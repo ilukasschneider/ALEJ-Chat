@@ -4,6 +4,12 @@
 This repository contains the code for the third project in the university course “AI & the Web.” It demonstrates how to create a chat-like web application that uses different components (hub, channel, client) along with a React frontend.
 
 ---
+## Content
+The channel we developed is entirely about cooking. It holds an API connection to ChatGPT such that recipe requests can be made. Messages containing harmful language or content unrelated to cooking are filtered out.
+The requests can have different intentions, you can provide a list of ingredients or just formulate a vague idea for a recipe, both will prove successful.
+This may also include a list of ingredients that should NOT be included. 
+The channel only holds a maximum of 200 messages, if this limit is exceeded the oldest messages will iteratively be deleted.
+Messages can be filtered according to their nationality and their taste (sweet/savory).
 
 ## Prerequisites
 Make sure you have the following installed and updated:
