@@ -389,10 +389,6 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                 <button className="btn-ghost ml-2" onClick={extractTastes}>
                   Taste
                 </button>
-                < button className="btn-ghost ml-2"
-              onClick={startSpeechRecognition}>
-              Start speech recognition 🎤
-            </button>
               </div>
             )}
 
