@@ -6,6 +6,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [messages, setMessages] = useState([]);
   // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
+  const [inputValue, setInputValue] = useState("");
   // Variables to toggle visibility of different components
   const [isWelcomeVisible, setIsWelcomeVisible] = useState(true);
   const [showNationalities, setShowNationalities] = useState(false);
@@ -15,6 +16,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [nationalities, setNationalities] = useState([]);
   const [tastes, setTastes] = useState([]);// State for nationalities
   const [filteredMessages, setFilteredMessages] = useState([]);
+  const [recognitionSupported, setRecognitionSupported] = useState(false)
 
 
   const currentUserName = userName || "Anonymous";
@@ -29,6 +31,14 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   //   }, 8000);
   // }, [inputStatus]);
 
+  // Check for speech recognition support
+  useEffect(() => {
+    window.SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (window.SpeechRecognition) {
+      setRecognitionSupported(true);
+    }
+  }, []);
   // automatically scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -88,6 +98,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     } finally {
       setInputStatus(true);
       fetchData();
+      setInputValue(""); // Clear input after sending
     }
   };
 
@@ -236,6 +247,31 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     setFilteredMessages(messages);
   };
 
+  // Speech recognition logic
+  const startSpeechRecognition = () => {
+
+    if (!recognitionSupported){
+      alert("Sorry, it seems like your browser does not support speech recognition!")
+      return;
+    }
+    const recognition = new window.SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const speechToText = event.results[0][0].transcript;
+      setInputValue(speechToText);
+      onSendMessage(speechToText);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+    };
+  };
+
   return (
     <>
       <div className="flex items-center justify-center bg-transparent">
@@ -353,8 +389,13 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                 <button className="btn-ghost ml-2" onClick={extractTastes}>
                   Taste
                 </button>
+                < button className="btn-ghost ml-2"
+              onClick={startSpeechRecognition}>
+              Start speech recognition 🎤
+            </button>
               </div>
             )}
+
             {/*if one of the filter buttons is clicked show the different choices they provide*/}
             {showNationalities && (
                 <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">
@@ -386,6 +427,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                   ))}
                 </div>
             )}
+
             {/*if only filtered messages are shown a button appears offering the possibility to show all messages again*/}
             {filteredMessages.length !== messages.length && (
                 <div className="flex justify-end my-2">
@@ -396,24 +438,45 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
             )}
             {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
             {inputStatus ? (
-                <input
-                    type="text"
-                    placeholder="type here and press enter to send a message"
-                    className="input input-bordered w-full input-ghost"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        onSendMessage(e.target.value);
-                        //setUserMessage(e.target.value);
-                        e.target.value = "";
-                        //setInputStatus(false);
-                      }
-                    }}
-                />
+                <div className="flex items-center">
+                  <input
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder="Type here and press enter to send a message"
+                      className="input input-bordered w-full input-ghost"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          onSendMessage(inputValue);
+                          e.target.value = "";
+                          setInputValue("");
+                        }
+                      }}
+                  />
+                  {/*{recognitionSupported && (*/}
+                      <button
+                          className="btn-ghost ml-2"
+                          onClick={startSpeechRecognition}
+                      >
+                        🎤
+                      </button>
+                  {/*)}*/}
+                </div>
+
             ) : (
                 <div className="flex justify-center">
                   <span className="loading loading-infinity loading-lg"></span>
                 </div>
             )}
+            {/*{recognitionSupported && (*/}
+            {/*   <button*/}
+            {/*     className="btn-ghost ml-2"*/}
+            {/*     onClick={startSpeechRecognition}*/}
+            {/*   >*/}
+            {/*     🎤*/}
+            {/*   </button>*/}
+            {/* )}*/}
+
           </div>
         </div>
       </div>
