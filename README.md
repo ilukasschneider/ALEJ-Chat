@@ -61,3 +61,7 @@ If you prefer a more modern interface, follow these steps to use the React front
    `npm install`
 4. Start the development server:
    `npm run dev`  
+
+## Speech Recognition
+Unfortunately, the speech recognition functionality is not supported in some browsers (e.g. Firefox).
+If you want to make use of it, we recommend for example Microsoft Edge as a browser. You will get a notification if your browser does not support speech recognition.
