@@ -249,7 +249,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
   // Speech recognition logic
   const startSpeechRecognition = () => {
-
+    // if speech recognition is not supported in the browser, inform the user and return
     if (!recognitionSupported){
       alert("Sorry, it seems like your browser does not support speech recognition!")
       return;
@@ -260,7 +260,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     recognition.maxAlternatives = 1;
 
     recognition.start();
-
+    // user message is the recognized speech
     recognition.onresult = (event) => {
       const speechToText = event.results[0][0].transcript;
       setInputValue(speechToText);
@@ -450,6 +450,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                       }}
                   />
                   {/*{recognitionSupported && (*/}
+                  {/*button to start speech recognition*/}
                       <button
                           className="btn-ghost ml-2"
                           onClick={startSpeechRecognition}
@@ -464,19 +465,10 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                   <span className="loading loading-infinity loading-lg"></span>
                 </div>
             )}
-            {/*{recognitionSupported && (*/}
-            {/*   <button*/}
-            {/*     className="btn-ghost ml-2"*/}
-            {/*     onClick={startSpeechRecognition}*/}
-            {/*   >*/}
-            {/*     🎤*/}
-            {/*   </button>*/}
-            {/* )}*/}
 
           </div>
         </div>
       </div>
-      {/*</div>*/}
     </>
   );
 };
