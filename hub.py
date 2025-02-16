@@ -1,11 +1,17 @@
-from flask import Flask, request, render_template, jsonify, redirect, url_for
+from flask import Flask, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import json
 import datetime
 import requests
 
+# for local development - delete later
+from flask import Flask
+from flask_cors import CORS
+
 db = SQLAlchemy()
 
+# Define the User data-model.
+# NB: Make sure to add flask_user UserMixin as this adds additional fields and properties required by Flask-User
 class Channel(db.Model):
     __tablename__ = 'channels'
     id = db.Column(db.Integer, primary_key=True)
@@ -15,7 +21,6 @@ class Channel(db.Model):
     authkey = db.Column(db.String(100, collation='NOCASE'), nullable=False)
     type_of_service = db.Column(db.String(100, collation='NOCASE'), nullable=False)
     last_heartbeat = db.Column(db.DateTime(), nullable=True, server_default=None)
-
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -30,23 +35,33 @@ class ConfigClass(object):
 
 # Create Flask app
 app = Flask(__name__)
+
+
+# DELETE BEFORE DEPLOYMENT!!
+CORS(app)  # this will allow CORS for all routes by default
+
+
 app.config.from_object(__name__ + '.ConfigClass')  # configuration
 app.app_context().push()  # create an app context before initializing db
 db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 
 SERVER_AUTHKEY = '1234567890'
-STANDARD_CLIENT_URL = 'http://localhost:5005' # standard configuration in client.py, chang to real URL if necessary
+
+
+# The Home page is accessible to anyone
+@app.route('/')
+def home_page():
+    # render home.html template
+    channels = Channel.query.all()
+    return render_template("home.html")
+
 
 def health_check(endpoint, authkey):
     # make GET request to URL
     # add authkey to request header
-    try:
-        response = requests.get(endpoint+'/health',
-                                headers={'Authorization': 'authkey '+authkey})
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
-        return False
+    response = requests.get(endpoint+'/health',
+                            headers={'Authorization': 'authkey '+authkey})
     if response.status_code != 200:
         return False
     # check if response is JSON with {"name": <channel_name>}
@@ -55,8 +70,6 @@ def health_check(endpoint, authkey):
     # check if channel name is as expected
     # (channels can't change their name, must be re-registered)
     channel = Channel.query.filter_by(endpoint=endpoint).first()
-    channel.active = False
-    db.session.commit()
     if not channel:
         print(f"Channel {endpoint} not found in database")
         return False
@@ -65,28 +78,9 @@ def health_check(endpoint, authkey):
         return False
 
     # everything is OK, set last_heartbeat to now
-    channel.active = True
     channel.last_heartbeat = datetime.datetime.now()
     db.session.commit()  # save to database
     return True
-
-# cli command to check health of all channels
-@app.cli.command('check_channels')
-def check_channels():
-    channels = Channel.query.all()
-    for channel in channels:
-        if not health_check(channel.endpoint, channel.authkey):
-            print(f"Channel {channel.endpoint} is not healthy")
-        else:
-            print(f"Channel {channel.endpoint} is healthy")
-
-# The Home page is accessible to anyone
-@app.route('/')
-def home_page():
-    # find all active channels
-    channels = Channel.query.filter_by(active=True).all()
-    # render hub_home.html template
-    return render_template("hub_home.html", channels=channels, STANDARD_CLIENT_URL=STANDARD_CLIENT_URL)
 
 
 # Flask REST route for POST to /channels
@@ -143,28 +137,11 @@ def create_channel():
 
 @app.route('/channels', methods=['GET'])
 def get_channels():
-    channels = Channel.query.filter_by(active=True).all()
-
+    channels = Channel.query.all()
     return jsonify(channels=[{'name': c.name,
                               'endpoint': c.endpoint,
                               'authkey': c.authkey,
                               'type_of_service': c.type_of_service} for c in channels]), 200
-
-
-@app.route('/health', methods=['GET'])
-def health():
-    # check either all channels or a specific channel (if id is provided)
-    if 'id' in request.args:
-        channel = Channel.query.filter_by(id=request.args['id']).first()
-        health_check(channel.endpoint, channel.authkey)
-    else:
-        channels = Channel.query.all()
-        for channel in channels:
-            health_check(channel.endpoint, channel.authkey)
-
-    # flask redirect to home page
-    return redirect(url_for('home_page'))
-
 
 
 # Start development web server
