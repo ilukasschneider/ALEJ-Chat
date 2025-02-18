@@ -20,9 +20,15 @@ API_KEY = config["OPENAI-KEY"]
 
 # constant messages
 
-# system response for invalid request
-INVALID_ANSWER = {
-    "content": "This channel is entirely about cooking. We have deleted your message because it either isnt about cooking or because it contained harmful language",
+# system response for messages containing harmful language
+INVALID_ANSWER_PROFANITY = {
+    "content": "This channel is entirely about cooking. We have deleted your message because it contained harmful language.",
+    "sender": "system",
+    "extra": ""
+}
+# system response for messages off-topic
+INVALID_ANSWER_TOPIC = {
+    "content": "This channel is entirely about cooking. We have deleted your message because it contained a request that was not related to cooking.",
     "sender": "system",
     "extra": ""
 }
@@ -158,7 +164,7 @@ def check_and_generate(message):
     # process answer
     if answer.startswith("NO!"):
         # user request has unsuited content
-        invalid_answer = INVALID_ANSWER.copy()
+        invalid_answer = INVALID_ANSWER_TOPIC.copy()
         invalid_answer["timestamp"] = datetime.now().isoformat()
 
         return [invalid_answer]
@@ -234,7 +240,7 @@ def send_message():
 
     if predict([message["content"]]):
         # return system answer if the post contains profanity
-        invalid_answer = INVALID_ANSWER.copy()
+        invalid_answer = INVALID_ANSWER_PROFANITY.copy()
         invalid_answer["timestamp"] = datetime.now().isoformat()
         new_messages = [invalid_answer]
     else:
