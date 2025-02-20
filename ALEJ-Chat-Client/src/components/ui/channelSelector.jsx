@@ -86,7 +86,7 @@ const ChannelSelector = () => {
             {channels.map((channel) => (
               <li key={channel.endpoint}>
                 <button onClick={() => setSelectedChannel(channel)}>
-                  {channel.name}
+                  {channel.name === "Recipe Rendezvous" ? (<b><u>{channel.name }</u></b>) : channel.name}
                 </button>
               </li>
             ))}
