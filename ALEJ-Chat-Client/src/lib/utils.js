@@ -1,5 +1,5 @@
-const HUB_AUTHKEY = "1234567890";
-const HUB_URL = "http://localhost:5555";
+const HUB_AUTHKEY = "";
+const HUB_URL = "";
 
 var CHANNELS = null;
 var LAST_CHANNEL_UPDATE = null;
