@@ -50,6 +50,7 @@ export async function getChannels() {
 // fetches messages from a channel like the show_channel() inside the original client.py
 export async function getChannelMessages(endpoint, authkey) {
   // fetch list of messages from channel
+  console.log("Will fetch messages from", endpoint);
   const response = await fetch(endpoint, {
     headers: {
       Authorization: "authkey " + authkey,

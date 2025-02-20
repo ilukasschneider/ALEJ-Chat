@@ -1,8 +1,10 @@
 import PropTypes from "prop-types";
 import { getChannelMessages, postMessage } from "../../lib/utils";
 import { useEffect, useState, useRef } from "react";
+import DOMPurify from 'dompurify';
 
 const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
+  console.log(channelName, endpoint, auth, userName)
   const [messages, setMessages] = useState([]);
   // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
@@ -17,7 +19,6 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [tastes, setTastes] = useState([]);// State for nationalities
   const [filteredMessages, setFilteredMessages] = useState([]);
   const [recognitionSupported, setRecognitionSupported] = useState(false)
-
 
   const currentUserName = userName || "Anonymous";
 
@@ -41,6 +42,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   }, []);
   // automatically scroll to bottom whenever messages change
   useEffect(() => {
+    console.log("Will scroll down")
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -56,7 +58,10 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     try {
       const data = await getChannelMessages(endpoint, auth);
 
+      // console.log(!isDataEqual(data))
       if (!isDataEqual(data)) {
+        console.log("Sets new Messages")
+        console.log(data.at(-1))
         setMessages(data);
         setFilteredMessages(data);
       }
@@ -66,10 +71,19 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   };
   // determine if the new data is equal to the current state data
   const isDataEqual = (newMessages) => {
+    // console.log(newMessages)
+    // console.log(messages)
+
     if (newMessages.length !== messages.length) {
       return false;
     }
+    // console.log(JSON.stringify(newMessages.at(-1)))
+    // console.log(JSON.stringify(messages.at(-1)))
+    console.log(JSON.stringify(newMessages.at(-1)) === JSON.stringify(messages.at(-1)))
+    return JSON.stringify(newMessages.at(-1)) === JSON.stringify(messages.at(-1))
     return newMessages.every((obj, index) => {
+      console.log([JSON.stringify(obj), JSON.stringify(messages[index])])
+      console.log(JSON.stringify(obj) === JSON.stringify(messages[index]))
       return JSON.stringify(obj) === JSON.stringify(messages[index]);
     });
   };
@@ -118,7 +132,7 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
 
   // formating of the messages to display them in a clear and structured way
   const formatMessageContent = (content, extra) => {
-
+    
     // extract the nationality of the extra field
     const nationality =
       extra && extra.trim() !== ""
@@ -132,6 +146,8 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     // Set emoji based on the category
     const emoji =
       category === "sweet" ? "🍰" : category === "savory" ? "🍲" : "";
+
+    content = DOMPurify.sanitize(content).replace(/\\b([^\\]+)\\b/g, '<b>$1</b>').replace(/\\i([^\\]+)\\i/g, '<i>$1</i>').replace(/\\u([^\\]+)\\u/g, '<u>$1</u>');
 
     // extract the title and the subsections of the recipe
     const sections = content.split(/(?=##|\*\*)/);
@@ -172,16 +188,16 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               .replace(":", "")
               .trim(); // Remove ** and colon
             const content = subsectionParts.slice(1).join("\n").trim(); // Content following the title
-
+            
             return (
               <div key={index} className="mb-3">
                 <div className="underline font-semibold mb-1">{title}</div>
-                <div>{content}</div>
+                <div dangerouslySetInnerHTML={{ __html: content }}>{/*content*/}</div>
               </div>
             );
           } else {
             // Display content normally if not matched
-            return <div key={index}>{section.trim()}</div>;
+            return <div key={index} dangerouslySetInnerHTML={{ __html: section.trim() }}>{/*section.trim()*/}</div>;
           }
         })}
       </div>
