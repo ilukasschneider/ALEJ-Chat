@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import DOMPurify from 'dompurify';
 
 const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
-  console.log(channelName, endpoint, auth, userName)
   const [messages, setMessages] = useState([]);
   // const [userMessage, setUserMessage] = useState("");
   const [inputStatus, setInputStatus] = useState(true);
@@ -25,13 +24,6 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   // reference for last message
   const messagesEndRef = useRef(null);
 
-  // wait 5 seconds before allowing the user to send another message
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setInputStatus(true);
-  //   }, 8000);
-  // }, [inputStatus]);
-
   // Check for speech recognition support
   useEffect(() => {
     window.SpeechRecognition =
@@ -42,7 +34,6 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   }, []);
   // automatically scroll to bottom whenever messages change
   useEffect(() => {
-    console.log("Will scroll down")
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -53,53 +44,30 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
     return () => clearInterval(intervalId);
   }, [endpoint, auth]);
 
-  // Function to fetch data from the API
   const fetchData = async () => {
     try {
       const data = await getChannelMessages(endpoint, auth);
-
-      // console.log(!isDataEqual(data))
-      if (!isDataEqual(data)) {
-        console.log("Sets new Messages")
-        console.log(data.at(-1))
-        setMessages(data);
-        setFilteredMessages(data);
-      }
+  
+      setMessages((prevMessages) => {
+        if (!isDataEqual(prevMessages, data)) {
+          setFilteredMessages(data); // Ensure filteredMessages is updated too
+  
+          return data; 
+        }
+        return prevMessages;
+      });
     } catch (err) {
       console.error("Failed to fetch messages:", err);
     }
   };
   // determine if the new data is equal to the current state data
-  const isDataEqual = (newMessages) => {
-    // console.log(newMessages)
-    // console.log(messages)
-
-    if (newMessages.length !== messages.length) {
+  const isDataEqual = (prevMessages, newMessages) => {
+    if (newMessages.length !== prevMessages.length) {
       return false;
-    }
-    // console.log(JSON.stringify(newMessages.at(-1)))
-    // console.log(JSON.stringify(messages.at(-1)))
-    console.log(JSON.stringify(newMessages.at(-1)) === JSON.stringify(messages.at(-1)))
-    return JSON.stringify(newMessages.at(-1)) === JSON.stringify(messages.at(-1))
-    return newMessages.every((obj, index) => {
-      console.log([JSON.stringify(obj), JSON.stringify(messages[index])])
-      console.log(JSON.stringify(obj) === JSON.stringify(messages[index]))
-      return JSON.stringify(obj) === JSON.stringify(messages[index]);
-    });
+    }  
+    return JSON.stringify(newMessages.at(-1)) === JSON.stringify(prevMessages.at(-1));
   };
-  // useEffect(() => {
-  //   const sendMessage = async () => {
-  //     try {
-  //       await postMessage(endpoint, auth, userMessage, currentUserName);
-  //     } catch (err) {
-  //       console.error("Failed to post message:", err);
-  //     }
-  //   };
 
-  //   if (userMessage) {
-  //     sendMessage();
-  //   }
-  // }, [userMessage, endpoint, auth, currentUserName]);
 
   // send a message to the server
   const onSendMessage = async (message) => {
