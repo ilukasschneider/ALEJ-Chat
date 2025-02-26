@@ -19,6 +19,9 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
   const [filteredMessages, setFilteredMessages] = useState([]);
   const [recognitionSupported, setRecognitionSupported] = useState(false)
 
+  // determine if filter functionality should be shown
+  const isRecipe = channelName === "Recipe Rendezvous";
+
   const currentUserName = userName || "Anonymous";
 
   // reference for last message
@@ -357,8 +360,9 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
               {/* div to scroll to -> Last Message */}
               <div ref={messagesEndRef}/>
             </div>
-
-            {/*button to hide and show the filter buttons*/}
+            {isRecipe && (
+                <>
+                  {/*button to hide and show the filter buttons*/}
             <div className="flex justify-end my-4">
               <button className="btn-ghost" onClick={toggleFilters}>
                 {showFilters ? "Hide Filters ▲" : "Show Filters ▼"}
@@ -416,6 +420,66 @@ const ChatWindow = ({ channelName, endpoint, auth, userName }) => {
                   </button>
                 </div>
             )}
+                </>
+            )}
+            {/*/!*button to hide and show the filter buttons*!/*/}
+            {/*<div className="flex justify-end my-4">*/}
+            {/*  <button className="btn-ghost" onClick={toggleFilters}>*/}
+            {/*    {showFilters ? "Hide Filters ▲" : "Show Filters ▼"}*/}
+            {/*  </button>*/}
+            {/*</div>*/}
+            {/*/!*the two filter buttons nationalities and taste*!/*/}
+            {/*{showFilters && (*/}
+            {/*  <div className="flex justify-end my-4">*/}
+            {/*    <button className="btn-ghost" onClick={extractNationalities}>*/}
+            {/*      Nationalities*/}
+            {/*    </button>*/}
+            {/*    <button className="btn-ghost ml-2" onClick={extractTastes}>*/}
+            {/*      Taste*/}
+            {/*    </button>*/}
+            {/*  </div>*/}
+            {/*)}*/}
+
+            {/*/!*if one of the filter buttons is clicked show the different choices they provide*!/*/}
+            {/*{showNationalities && (*/}
+            {/*    <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">*/}
+            {/*      {nationalities.map((nat, index) => (*/}
+            {/*          // background of the choices marks the choices when hovering over them*/}
+            {/*          <p*/}
+            {/*              key={index}*/}
+            {/*              onClick={() => filterMessagesByNationality(nat)}*/}
+            {/*              className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"*/}
+            {/*              style={{borderRadius: "4px", transition: "background-color 0.3s"}}*/}
+            {/*          >*/}
+            {/*            {nat}*/}
+            {/*          </p>*/}
+            {/*      ))}*/}
+            {/*    </div>*/}
+            {/*)}*/}
+            {/*/!*same functionality as the button above*!/*/}
+            {/*{showTastes && (*/}
+            {/*    <div className="flex justify-end my-4 overflow-y-auto max-h-32 border p-2">*/}
+            {/*      {tastes.map((taste, index) => (*/}
+            {/*          <p*/}
+            {/*              key={index}*/}
+            {/*              onClick={() => filterMessagesByTaste(taste)}*/}
+            {/*              className="cursor-pointer mb-1 mx-2 px-2 py-1 hover:bg-gray-200 transition-colors duration-200"*/}
+            {/*              style={{borderRadius: "4px", transition: "background-color 0.3s"}}*/}
+            {/*          >*/}
+            {/*            {taste}*/}
+            {/*          </p>*/}
+            {/*      ))}*/}
+            {/*    </div>*/}
+            {/*)}*/}
+
+            {/*/!*if only filtered messages are shown a button appears offering the possibility to show all messages again*!/*/}
+            {/*{filteredMessages.length !== messages.length && (*/}
+            {/*    <div className="flex justify-end my-2">*/}
+            {/*      <button className="btn-ghost" onClick={showAllMessages}>*/}
+            {/*        Show All Messages*/}
+            {/*      </button>*/}
+            {/*    </div>*/}
+            {/*)}*/}
             {/* Input area switches to little loading animation for 8 seconds after writing a message*/}
             {inputStatus ? (
                 <div className="flex items-center">
