@@ -9,7 +9,7 @@ The channel we developed is entirely about cooking. It holds an API connection t
 The requests can have different intentions, you can provide a list of ingredients or just formulate a vague idea for a recipe, both will prove successful.
 This may also include a list of ingredients that should NOT be included. 
 The channel only holds a maximum of 200 messages, if this limit is exceeded the oldest messages will iteratively be deleted.
-Messages can be filtered according to their nationality and their taste (sweet/savory).
+Messages can be filtered according to their nationality and their taste (sweet/savory). For the best experience stick to English in your messages, as everything is fine-tuned for the English language, though most of the time it works properly in other languages, too.
 
 ## Prerequisites
 Make sure you have the following installed and updated:
